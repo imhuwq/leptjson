@@ -139,16 +139,6 @@ static void test_parse_root_not_singular() {
   TEST_ERROR(LEPT_PARSE_ROOT_NOT_SINGULAR, "false true");
 }
 
-static void test_access_string() {
-  lept_value v;
-  lept_init(&v);
-  lept_set_string(&v, "", 0);
-  EXPECT_EQ_STRING("", lept_get_string(&v), lept_get_string_length(&v));
-  lept_set_string(&v, "HELLO", 5);
-  EXPECT_EQ_STRING("HELLO", lept_get_string(&v), lept_get_string_length(&v));
-  lept_free(&v);
-}
-
 static void test_parse_number_too_big() {
   TEST_ERROR(LEPT_PARSE_NUMBER_TOO_BIG, "1e309");
   TEST_ERROR(LEPT_PARSE_NUMBER_TOO_BIG, "-1e309");
@@ -169,6 +159,47 @@ static void test_parse_invalid_string_escape() {
 static void test_parse_invalid_string_char() {
   TEST_ERROR(LEPT_PARSE_INVALID_STRING_CHAR, "\"\x01\"");
   TEST_ERROR(LEPT_PARSE_INVALID_STRING_CHAR, "\"\x1F\"");
+}
+
+static void test_parse_invalid_unicode_hex() {
+  TEST_ERROR(LEPT_PARSE_INVALID_UNICODE_HEX, "\"\\u\"");
+  TEST_ERROR(LEPT_PARSE_INVALID_UNICODE_HEX, "\"\\u0\"");
+  TEST_ERROR(LEPT_PARSE_INVALID_UNICODE_HEX, "\"\\u01\"");
+  TEST_ERROR(LEPT_PARSE_INVALID_UNICODE_HEX, "\"\\u012\"");
+  TEST_ERROR(LEPT_PARSE_INVALID_UNICODE_HEX, "\"\\u/000\"");
+  TEST_ERROR(LEPT_PARSE_INVALID_UNICODE_HEX, "\"\\uG000\"");
+  TEST_ERROR(LEPT_PARSE_INVALID_UNICODE_HEX, "\"\\u0/00\"");
+  TEST_ERROR(LEPT_PARSE_INVALID_UNICODE_HEX, "\"\\u0G00\"");
+  TEST_ERROR(LEPT_PARSE_INVALID_UNICODE_HEX, "\"\\u0/00\"");
+  TEST_ERROR(LEPT_PARSE_INVALID_UNICODE_HEX, "\"\\u00G0\"");
+  TEST_ERROR(LEPT_PARSE_INVALID_UNICODE_HEX, "\"\\u000/\"");
+  TEST_ERROR(LEPT_PARSE_INVALID_UNICODE_HEX, "\"\\u000G\"");
+  TEST_ERROR(LEPT_PARSE_INVALID_UNICODE_HEX, "\"\\u 123\"");
+}
+
+static void test_parse_invalid_unicode_surrogate() {
+  TEST_ERROR(LEPT_PARSE_INVALID_UNICODE_SURROGATE, "\"\\uD800\"");
+  TEST_ERROR(LEPT_PARSE_INVALID_UNICODE_SURROGATE, "\"\\uDBFF\"");
+  TEST_ERROR(LEPT_PARSE_INVALID_UNICODE_SURROGATE, "\"\\uD800\\\\\"");
+  TEST_ERROR(LEPT_PARSE_INVALID_UNICODE_SURROGATE, "\"\\uD800\\uDBFF\"");
+  TEST_ERROR(LEPT_PARSE_INVALID_UNICODE_SURROGATE, "\"\\uD800\\uE000\"");
+}
+
+static void test_parse() {
+  test_parse_null();
+  test_parse_true();
+  test_parse_false();
+  test_parse_number();
+  test_parse_string();
+  test_parse_expect_value();
+  test_parse_invalid_value();
+  test_parse_root_not_singular();
+  test_parse_number_too_big();
+  test_parse_missing_quotation_mark();
+  test_parse_invalid_string_escape();
+  test_parse_invalid_string_char();
+  test_parse_invalid_unicode_hex();
+  test_parse_invalid_unicode_surrogate();
 }
 
 static void test_access_null() {
@@ -200,20 +231,17 @@ static void test_access_number() {
   lept_free(&v);
 }
 
-static void test_parse() {
-  test_parse_null();
-  test_parse_true();
-  test_parse_false();
-  test_parse_number();
-  test_parse_string();
-  test_parse_expect_value();
-  test_parse_invalid_value();
-  test_parse_root_not_singular();
-  test_parse_number_too_big();
-  test_parse_missing_quotation_mark();
-  test_parse_invalid_string_escape();
-  test_parse_invalid_string_char();
+static void test_access_string() {
+  lept_value v;
+  lept_init(&v);
+  lept_set_string(&v, "", 0);
+  EXPECT_EQ_STRING("", lept_get_string(&v), lept_get_string_length(&v));
+  lept_set_string(&v, "HELLO", 5);
+  EXPECT_EQ_STRING("HELLO", lept_get_string(&v), lept_get_string_length(&v));
+  lept_free(&v);
+}
 
+static void test_access() {
   test_access_null();
   test_access_string();
   test_access_boolean();
@@ -222,6 +250,7 @@ static void test_parse() {
 
 int main() {
   test_parse();
+  test_access();
   printf("%d/%d (%3.2f%%) passed\n", test_pass, test_count, test_pass * 100.0 / test_count);
   return main_ret;
 }
